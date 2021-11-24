@@ -1,6 +1,6 @@
 import pygame
 import random
-from pygame import mixer
+from pygame import Rect, mixer
 pygame.init()
 
 screen_wight = 600
@@ -19,6 +19,7 @@ body_outer = (100,100,200)
 red = (255,0,0)
 foodc = (255,255,255)
 blue = (0, 0, 255)
+white = (255,255,255)
 
 cell_size= 20
 direction = 1
@@ -29,6 +30,8 @@ food =[0,0]
 new_food = True
 food_place = [0,0]
 score = 0 
+game_over = False
+clicked = False
 
 
 font = pygame.font.SysFont(None,40)
@@ -41,10 +44,36 @@ def draw_score():
     score_img = font.render(score_text,True,blue)
     screen.blit(score_img,(5,5))
 
+def check_game_over(game_over):
+
+    # Snakes eat itself 
+    head_count =0
+    for segment in snake_pos:
+        if snake_pos[0] ==segment and head_count>0:
+            game_over = True
+        head_count +=1
+    
+    #Chek Touch Boundary
+    if snake_pos[0][0]<0 or snake_pos[0][0] > screen_wight or snake_pos[0][1]<0 or snake_pos[0][1] > screen_hight:
+        game_over = True
+    
+    return game_over
+
+# again_reac = Rect(screen_wight//2-80, screen_wight//2+5, 154,40)
+again_rect = Rect(screen_wight // 2 - 80, screen_wight // 2, 160, 50)
+def draw_game_over():
+    ove_text = "Game Over !!!"
+    over_img = font.render(ove_text,True,white)
+    pygame.draw.rect(screen,blue,(screen_wight//2 -80, screen_hight//2 - 70,194,60),0,10)
+    screen.blit(over_img,(screen_wight//2-80,screen_hight//2-50))
+
+    again_txt = "Play Again"
+    again_img = font.render(again_txt,True,white)
+    pygame.draw.rect(screen, blue, again_rect,0,10)
+    screen.blit(again_img, (screen_wight // 2 - 80, screen_hight // 2 + 10))
 
 
-
-
+# Snakes Creat and  Set Positions 
 snake_pos = [[int(screen_wight/2),int(screen_hight/2)]]
 snake_pos.append([int(screen_wight/2),int(screen_hight/2)+cell_size])
 snake_pos.append([int(screen_wight/2),int(screen_hight/2)+cell_size * 2])
@@ -53,14 +82,12 @@ snake_pos.append([int(screen_wight/2),int(screen_hight/2)+cell_size * 3 ])
 
 
 
-
-
 run = True
 while run:
 
+
     draw_screen()
     draw_score()
-
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -114,30 +141,53 @@ while run:
 
 
 
+    if game_over == False:
+        if update_snake > 80:
+            update_snake = 0
+            snake_pos = snake_pos[-1:] + snake_pos[:-1]
+            if direction == 1:
+                snake_pos[0][0] = snake_pos[1][0]
+                snake_pos[0][1] = snake_pos[1][1] - cell_size
+                #heading down
+            if direction == 3:
+                snake_pos[0][0] = snake_pos[1][0]
+                snake_pos[0][1] = snake_pos[1][1] + cell_size
+                #heading right
+            if direction == 2:
+                snake_pos[0][1] = snake_pos[1][1]
+                snake_pos[0][0] = snake_pos[1][0] + cell_size
+                #heading left
+            if direction == 4:
+                snake_pos[0][1] = snake_pos[1][1]
+                snake_pos[0][0] = snake_pos[1][0] - cell_size
 
-    if update_snake > 80:
-        update_snake = 0
-        snake_pos = snake_pos[-1:] + snake_pos[:-1]
-        if direction == 1:
-            snake_pos[0][0] = snake_pos[1][0]
-            snake_pos[0][1] = snake_pos[1][1] - cell_size
-			#heading down
-        if direction == 3:
-            snake_pos[0][0] = snake_pos[1][0]
-            snake_pos[0][1] = snake_pos[1][1] + cell_size
-			#heading right
-        if direction == 2:
-            snake_pos[0][1] = snake_pos[1][1]
-            snake_pos[0][0] = snake_pos[1][0] + cell_size
-			#heading left
-        if direction == 4:
-            snake_pos[0][1] = snake_pos[1][1]
-            snake_pos[0][0] = snake_pos[1][0] - cell_size
+            game_over= check_game_over(game_over)
 
-            
+    if game_over == True:
+            draw_game_over()
+            if event.type == pygame.MOUSEBUTTONDOWN and clicked == False:
+                clicked = True
+            if event.type == pygame.MOUSEBUTTONUP and clicked == True:
+                clicked = False
+                pos = pygame.mouse.get_pos()
+                if again_rect.collidedict(pos):
 
+                #reset variables
+                    direction =1
+                    update_snake = 0
+                    food =[0,0]
+                    new_food = True
+                    new_piece = [0, 0]
+                  
+                    score = 0
+                    game_over = False
 
-   
+                    # Creat Snake 
+                    snake_pos = [[int(screen_wight/2),int(screen_hight/2)]]
+                    snake_pos.append([int(screen_wight/2),int(screen_hight/2)+cell_size])
+                    snake_pos.append([int(screen_wight/2),int(screen_hight/2)+cell_size * 2])
+                    snake_pos.append([int(screen_wight/2),int(screen_hight/2)+cell_size * 3 ])
+
 
     head = 1
     for x in snake_pos:
